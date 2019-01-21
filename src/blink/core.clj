@@ -2,9 +2,7 @@
   (:require
    blink.spec
    [clojure.pprint :refer [pprint]]
-   [clojure.spec.alpha :as s])
-  (:gen-class))
-
+   [clojure.spec.alpha :as s]))
 
 
 (def invalid :clojure.spec.alpha/invalid)
@@ -14,7 +12,7 @@
 (def into-map (partial into {}))
 
 
-(def help-url "")
+(def help-url "https://github.com/igrishaev/blink/blob/master/README.md")
 
 (def help-usage
 
@@ -31,7 +29,6 @@
      (log/infof "HTTP Server stopped.")
 
      :default :my.ns/undefined))
-
 
 (def help-text
   (format
@@ -60,8 +57,17 @@ For more examples, see the official page:
   (symbol (str (name bind) suffix)))
 
 
+(defn raise
+
+  ([message]
+   (throw (ex-info message {})))
+
+  ([template & args]
+   (raise (apply format template args))))
+
+
+;; main top level ns
 ;; cljc support
-;; exception text
 
 
 (defmacro defstate
@@ -71,8 +77,7 @@ For more examples, see the official page:
         result (s/conform spec body)]
 
     (when (invalid? result)
-      (throw
-       (new Exception "todo")))
+      (raise help-text))
 
     (let [{:keys [doc start extra]} result
 
@@ -84,9 +89,7 @@ For more examples, see the official page:
           bind-stop    (bind-suffix bind "-stop")
           bind-restart (bind-suffix bind "-restart")
           bind-up?     (bind-suffix bind "-up?")
-          bind-down?   (bind-suffix bind "-down?")
-
-          ]
+          bind-down?   (bind-suffix bind "-down?")]
 
       `(let [default# (do ~@default)]
 
@@ -126,9 +129,3 @@ For more examples, see the official page:
            (~bind-start))
 
          default#))))
-
-
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (println "Hello, World!"))
