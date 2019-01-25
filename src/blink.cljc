@@ -1,16 +1,10 @@
-(ns blink.core
+(ns blink
   (:require
-   blink.spec
-   [clojure.pprint :refer [pprint]]
-   [clojure.spec.alpha :as s]))
+   [blink.spec :as s]
+   [clojure.pprint :refer [pprint]]))
 
-
-(def invalid :clojure.spec.alpha/invalid)
-
-(def invalid? (partial = invalid))
 
 (def into-map (partial into {}))
-
 
 (def help-url "https://github.com/igrishaev/blink/blob/master/README.md")
 
@@ -66,17 +60,22 @@ For more examples, see the official page:
    (raise (apply format template args))))
 
 
-;; main top level ns
 ;; cljc support
 
 
 (defmacro defstate
+
+  {:arglists '([symbol
+                docstring?
+                [start+]
+                [:stop stop*]?
+                [:default default*]?])}
+
   [bind & body]
 
-  (let [spec :blink.spec/blink
-        result (s/conform spec body)]
+  (let [result (s/conform-blink body)]
 
-    (when (invalid? result)
+    (when (s/invalid? result)
       (raise help-text))
 
     (let [{:keys [doc start extra]} result
@@ -109,19 +108,17 @@ For more examples, see the official page:
 
          (defn ~bind-start
            []
-           (when (~bind-down?)
-             (alter-var-root
-              (var ~bind)
-              (constantly
-               (do ~@start)))))
+           (alter-var-root
+            (var ~bind)
+            (constantly
+             (do ~@start))))
 
          (defn ~bind-stop
            []
-           (when (~bind-up?)
-             ~@stop
-             (alter-var-root
-              (var ~bind)
-              (constantly default#))))
+           ~@stop
+           (alter-var-root
+            (var ~bind)
+            (constantly default#)))
 
          (defn ~bind-restart
            []

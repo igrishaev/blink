@@ -1,6 +1,9 @@
 (ns blink.spec
   (:require
-   [clojure.spec.alpha :as s]))
+   #?(:clj
+      [clojure.spec.alpha :as s]
+      :cljs
+      [cljs.spec.alpha :as s])))
 
 
 (def tags #{:stop :default})
@@ -25,7 +28,7 @@
     :tag ::tag
     :code ::code-re))
 
-(s/def ::extra-repp
+(s/def ::extra-re
   (s/* ::extra-re-item))
 
 (s/def ::parse
@@ -53,3 +56,9 @@
 
 (s/def ::blink
   (s/and ::parse ::validate))
+
+
+(def invalid? (partial = ::s/invalid))
+
+
+(def conform-blink (partial s/conform ::blink))
