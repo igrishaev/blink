@@ -3,30 +3,6 @@
             blink))
 
 
-(blink/defstate
-  state
-
-  "Some docstring"
-
-  (println "Getting started...")
-
-  (let [thread
-        (Thread.
-         (fn []
-           (while true
-             (Thread/sleep 1000))))]
-
-    (.start ^Thread thread)
-    thread)
-
-  :stop
-
-  (.stop ^Thread state)
-
-  :default ::none)
-
-
-
 (def thread? (partial instance? Thread))
 
 
@@ -35,29 +11,63 @@
   (.isAlive thread))
 
 
+(defn sleep [sec]
+  (Thread/sleep (* sec 1000)))
+
+
+(blink/defstate
+  state
+
+  "Some docstring"
+
+  (println "Starting the thread...")
+
+  (let [thread
+        (Thread.
+         (fn []
+           (while true
+             (sleep 1))))]
+
+    (.start ^Thread thread)
+    (println "Thread has been started.")
+
+    thread)
+
+  :stop
+
+  (println "Stopping the thread...")
+  (.stop ^Thread state)
+
+  (sleep 1)
+  (println "Thread has been stopped.")
+
+  :default ::none)
+
+
+
 (deftest test-thread
 
-  (is (= state ::none))
-
-  (is (state-down?))
+  (testing "initial state"
+    (is (= state ::none))
+    (is (state-down?)))
 
   (state-start)
 
-  (let [doc (-> state var meta :doc)]
-    (is (= doc "Some docstring")))
+  (testing "doc"
+    (let [doc (-> state var meta :doc)]
+      (is (= doc "Some docstring"))))
 
-  (is (thread? state))
-  (is (alive? state))
-
-  (is (state-up?))
+  (testing "current state"
+    (is (thread? state))
+    (is (alive? state))
+    (is (state-up?)))
 
   (let [thread state]
 
     (state-stop)
 
-    (is (= state ::none))
-
-    (is (state-down?))
-
-    (thread? thread)
-    (is (not (alive? thread)))))
+    (testing "after stop"
+      (is (= state ::none))
+      (is (state-down?))
+      (thread? thread)
+      (is (not (alive? thread))))))
